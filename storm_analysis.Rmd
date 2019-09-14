@@ -1,12 +1,14 @@
 ---
 title: "Storm Events on Population Health and Economic Consequences"
-subtitle: "--An Analysis of the NOAA Storm Database (1950-2011), United States"
+subtitle: "-- An Analysis of the NOAA Storm Database (1950-2011), United States"
 
 author: by David Song
-date: "`r format(Sys.time(), ' %Y/%m/%d')`"
+date: "`r format(Sys.time(), ' %Y-%m-%d')`"
+fig_width: 9
 output: 
   html_document:
-  keep_md: true
+    keep_md: true
+    fig_caption: yes
 ---
   ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -18,7 +20,7 @@ This is John Hopkins University Data Science Series - Reproducible research, Cou
 
 This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
 
-In this study, we analysis fatalities and injuries, property and crop damages. We found that, tornado causes the highest fatalities and injuries, over weighted other factors. Surprisingly, overheat is the second largest fatality factor, which almost doubled the third largest factor fatality flood. Flood is the highest cause for property damages, and drought is the biggest cause for crop losses.
+In this study, we analysis fatalities and injuries, property and crop damages from various storm events. We found that, tornado causes the highest fatalities and injuries, over weighted other factors. Surprisingly, overheat is the second largest fatality factor, which almost doubled the third largest factor fatality flood. Flood is the highest cause for property damages, and drought is the biggest cause for crop losses.
 
 
 # Data 
@@ -28,7 +30,7 @@ Storm event Data which is used in this analysis study can be found at [Storm Dat
 
 There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
 
-* National Weather Service [Storm Data Documentation] (https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+* National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
 * National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
 
 The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
@@ -53,7 +55,7 @@ if (!file.exists(dest_file)){
 
 Read data into a dataframe and inspect column names, and head of the data
 
-```{r}
+```{r cache=TRUE}
 
 storm_data <- read.csv(dest_file, sep = ',')
 
@@ -65,12 +67,13 @@ head(storm_data)
 
 ```
 
+# Data Processing
 
-# Fatalities and Injuries Analysis
+## Fatalities and Injuries Analysis
 
-## Fatalities Analysis
+### Fatalities Analysis
 
-```{r}
+```{r cache=TRUE}
 
 fatalities <- with(storm_data, aggregate(FATALITIES ~ EVTYPE, FUN = sum, na.action = na.omit))
 
@@ -88,44 +91,45 @@ fatalities_10
 
 ```
 
-Plot the top 10 fatalities events
 
-```{r}
-
-par(mar = c(12, 8, 3, 2), mgp= c(5, 1, 0))
-with(fatalities_10, barplot(FATALITIES, las = 2, names.arg = EVTYPE, ylab = 'Number of fatalities', main='Top 10 Highest Fatalities', col = 'steelblue', ylim = c(0,6000)))
-
-```
-
-## Injuries Analysis
+### Injuries Analysis
 
 
-```{r}
+```{r cache=TRUE}
 
 injuries  <- with(storm_data, aggregate(INJURIES ~ EVTYPE, FUN = sum, na.action = na.omit))
 summary(injuries)
 injuries_10 <- injuries[order(-injuries$INJURIES), ][1:10,]
 injuries_10
-```
-
-Plot the top 10 injuries events
-```{r}
-
-par(mar = c(12, 8, 3, 2), mgp= c(5, 1, 0))
-with(injuries_10, barplot(INJURIES, las = 2, names.arg = EVTYPE, ylab = 'INJURIES', main='Top 10 Highest Injuries', col = 'steelblue')) 
 
 ```
 
-# Property and Crop Damages Analysis
+## Plot the top 10 Fatalities and Injuries events
 
-## The exponet code issue
-
-From the storm data, we can see there are PROPDMGEXP and CROPDMGEXP fields, which are assumely corresponding to the PROPDMG and CROPDMG fields respectly. However, we cannot find any information regarding how to decode these exponent fields, neither from NOAA or the course project description. Nevertheless, From the couse discussion forum, Johanna Baker points out a possible and reasonable decoding scheme: [How To Handle Exponent Value of PROPDMGEXP and CROPDMGEXP](https://github.com/flyingdisc/RepData_PeerAssessment2/blob/master/how-to-handle-PROPDMGEXP.md). We believe this decoding scheme is mostly correct and use it to continue futher. We also create a exponent decoder in csv formt, can be found in [Exponent Decoder](https://github.com/dsong99/Reproducible-Proj-2.git) for your reference. 
+```{r figs, fig.width=9, fig.height=5, fig.cap="\\label{fig:figs}Top 10 Fatalities and Injuries events", fig.align="center" }
 
 
-## The Exponent Decode
+par(mfrow = c(1, 2), mar = c(12, 8, 3, 2),  mgp = c(4, 1, 0), cex = 0.8)
 
-```{r}
+with(fatalities_10, barplot(FATALITIES, las = 2, names.arg = EVTYPE, ylab = 'Number of Fatalities', main='Top 10 Highest Fatalities Events', col = 'steelblue', ylim = c(0,6000)))
+
+with(injuries_10, barplot(INJURIES, las = 2, names.arg = EVTYPE, ylab = 'Injuries', main='Top 10 Highest Injuries Events', col = 'steelblue')) 
+
+```
+
+We can see that tornado causes the highest fatalities and injuries, over weighted other factors. Overheat is the second largest fatality factor.
+
+
+## Property and Crop Damages Analysis
+
+### The exponet code issue
+
+From the storm data, we can see there are PROPDMGEXP and CROPDMGEXP fields, which are assumedly corresponding to the PROPDMG and CROPDMG fields prospectively. Unfortunately, we cannot find any information regarding how to decode these exponent fields, neither from NOAA or the course project description. Nevertheless, From the course discussion forum, Johanna Baker points out a possible and reasonable decoding scheme: [How To Handle Exponent Value of PROPDMGEXP and CROPDMGEXP](https://github.com/flyingdisc/RepData_PeerAssessment2/blob/master/how-to-handle-PROPDMGEXP.md). We believe this decoding scheme is mostly correct and use it to continue our analysis further. We also created an exponent decoder in csv format, which can be found in [Exponent Decoder](https://github.com/dsong99/Reproducible-Proj-2.git) for your reference. 
+
+
+### The Exponent Decode
+
+```{r cache=TRUE}
 exp_code <- data.frame(
   'Exponent'=factor(c('K','k','M','m','B','b','H','h','0','1','2','3','4','5','6','7','8','+','-','?','')),
   'Multiplier' =c(1000,1000,1000000,1000000,1000000000,1000000000,100,100,1,1,1,1,1,1,1,1,1,1,0,0,0)
@@ -133,33 +137,48 @@ exp_code <- data.frame(
 
 ```
 
-## Property Damage
+### Property Damages
 
-```{r}
+```{r cache=TRUE}
+
 prop_data <- storm_data[,c('EVTYPE','PROPDMG','PROPDMGEXP')]
+
+unique(prop_data$PROPDMGEXP)
+
+
+```
+Decode the exponent to mutiplier, and find the top 10 properties damage events
+
+```{r cache=TRUE}
+
 prop_data <- merge(x=prop_data, y=exp_code, by.x = 'PROPDMGEXP', by.y = 'Exponent', all.x=TRUE )
 prop_data$PROPDMG <- prop_data$PROPDMG * prop_data$Multiplier
 prop_damages <- with(prop_data, aggregate(PROPDMG~EVTYPE, FUN=sum, na.action = na.omit))
 prop_damages_10 <- prop_damages[order(-prop_damages$PROPDMG),][1:10,]
-prop_damages_10
 
-prop_damages_10$PROPDMG <- round(prop_damages_10$PROPDMG/1e+9, 3)
-par(mar = c(12, 8, 3, 2), mgp= c(5, 1, 0))
-with(prop_damages_10, barplot(PROPDMG, las = 2, names.arg = EVTYPE, ylab = 'Property Damages in Billions ', main='Top 10 Highest Property Damages in Billions', col = 'steelblue'))
 ```
 
-## Crop Damage
+Convert to Billions
 
-```{r}
+```{r cache=TRUE}
+
+prop_damages_10$PROPDMG <- round(prop_damages_10$PROPDMG/1e+9, 3)
+prop_damages_10
+
+```
+
+### Crop Damages
+
+```{r cache=TRUE}
 crop_data <- storm_data[,c('EVTYPE','CROPDMG','CROPDMGEXP')]
 
 ### check CROPDMGEXP
 unique(crop_data$CROPDMGEXP)
 ```
 
-Decode the exponent
+Decode the exponent to mutiplier, and find the top 10 crop damage events
 
-```{r}
+```{r cache= TRUE}
 
 crop_data <- merge(x=crop_data, y=exp_code, by.x = 'CROPDMGEXP', by.y = 'Exponent', all.x=TRUE )
 crop_data$CROPDMG <- crop_data$CROPDMG * crop_data$Multiplier
@@ -168,13 +187,31 @@ crop_damages <- with(crop_data, aggregate(CROPDMG~EVTYPE, FUN=sum, na.action = n
 crop_damages_10 <- crop_damages[order(-crop_damages$CROPDMG),][1:10,]
 crop_damages_10
 
+```
 
-# convert to billions
+Convert to Billions
+```{r cache= TRUE}
+
 crop_damages_10$CROPDMG <- round(crop_damages_10$CROPDMG/1e+9, 3)
-par(mar = c(12, 8, 3, 2), mgp= c(5, 1, 0))
-with(crop_damages_10, barplot(CROPDMG, las = 2, names.arg = EVTYPE, ylab = 'Crop Damages in Billions ', main='Top 10 Highest Crop Damages in Billions', ylim=c(0, 14),col = 'steelblue'))
+crop_damages_10
 
 ```
+
+
+## Plot the top 10 Property and Crop Damages events
+
+```{r fig.width=9, fig.height=5, fig.cap="\\label{fig:figs}Top 10 Property and Crop Damages events", fig.align="center"}
+
+
+par(mfrow = c(1, 2), mar = c(12, 8, 3, 2),  mgp = c(3, 1, 0), cex = 0.8)
+
+with(prop_damages_10, barplot(PROPDMG, las = 2, names.arg = EVTYPE, ylab = 'Property Damages in Billions ', main='Top 10 Highest Property Damages Events', col = 'steelblue'))
+
+with(crop_damages_10, barplot(CROPDMG, las = 2, names.arg = EVTYPE, ylab = 'Crop Damages in Billions ', main='Top 10 Highest Crop Damages Events', ylim=c(0, 14),col = 'steelblue'))
+
+```
+
+From Above figure, we can see that floods caused the maximum property damage where as drought caused the maximum crop damage.
 
 #  Results and Conclusions
 From this study and analysis of the NOAA Storm Database (1950-2011), USA, we can see that tornados caused the maximum number of fatalities and injuries. Surprisingly, overheat is the second largest fatality factor. Floods caused the maximum property damage where as Drought caused the maximum crop damage
